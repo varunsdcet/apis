@@ -25,7 +25,7 @@ func main() {
 	// 🔐 Replace with your MySQL password if set
 	//db, err = sql.Open("mysql", "root:shyamroot@tcp(127.0.0.1:8889)/Ecomm")
 
-	db, err := sql.Open("mysql", "root:shyamroot@tcp(localhost:3306)/Ecomm")
+	db, err := sql.Open("mysql", "root:shyam@tcp(13.200.235.187:3306)/Ecomm")
 
 	if err != nil {
 		log.Fatal("Error opening DB:", err)
