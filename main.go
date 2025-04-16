@@ -1,48 +1,103 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
-	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
-// Struct for JSON response
-type Response struct {
-	Message string `json:"message,omitempty"`
-	Time    string `json:"time,omitempty"`
-}
+var db *sql.DB
 
-// Root handler for "/"
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	response := Response{Message: "Welcome to the Go server!"}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-// Hello handler for "/hello"
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	response := Response{Message: "Hello, Golang!"}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-// Time handler for "/time"
-func timeHandler(w http.ResponseWriter, r *http.Request) {
-	currentTime := time.Now().Format("2006-01-02 15:04:05")
-	response := Response{Time: currentTime}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+type User struct {
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Mobile string `json:"mobile"`
 }
 
 func main() {
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/hello", helloHandler)
-	http.HandleFunc("/time", timeHandler)
+	var err error
 
-	fmt.Println("Server starting at port 8080...")
-	err := http.ListenAndServe(":8080", nil)
+	// 🔐 Replace with your MySQL password if set
+	db, err = sql.Open("mysql", "root:shyamroot@tcp(127.0.0.1:8889)/Ecomm")
 	if err != nil {
-		fmt.Println("Error starting server:", err)
+		log.Fatal("Error opening DB:", err)
 	}
+
+	if err = db.Ping(); err != nil {
+		log.Fatal("DB connection failed:", err)
+	}
+
+	fmt.Println("Connected to MySQL successfully")
+
+	http.HandleFunc("/users", usersHandler)
+
+	fmt.Println("Server running on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func usersHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		insertUser(w, r)
+	case http.MethodGet:
+		getUsers(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func insertUser(w http.ResponseWriter, r *http.Request) {
+	var user User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, "Invalid JSON input", http.StatusBadRequest)
+		return
+	}
+
+	stmt, err := db.Prepare("INSERT INTO Users(name, email, mobile) VALUES (?, ?, ?)")
+	if err != nil {
+		http.Error(w, "Failed to prepare insert query", http.StatusInternalServerError)
+		return
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(user.Name, user.Email, user.Mobile)
+	if err != nil {
+		http.Error(w, "Failed to insert user", http.StatusInternalServerError)
+		return
+	}
+
+	id, _ := res.LastInsertId()
+	user.ID = int(id)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+func getUsers(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query("SELECT id, name, email, mobile FROM Users")
+	if err != nil {
+		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Mobile)
+		if err != nil {
+			http.Error(w, "Failed to scan user", http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
 }
