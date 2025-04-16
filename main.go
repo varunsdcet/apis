@@ -22,24 +22,20 @@ type User struct {
 func main() {
 	var err error
 
-	// 🔐 Replace with your MySQL password if set
-	//db, err = sql.Open("mysql", "root:shyamroot@tcp(127.0.0.1:8889)/Ecomm")
-
-	db, err := sql.Open("mysql", "root:shyam@tcp(13.200.235.187:3306)/Ecomm")
-
+	// Replace with your MySQL username, password, IP, port, and database
+	dsn := "root:shyam@tcp(13.200.235.187:3306)/Ecomm"
+	db, err = sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatal("Error opening DB:", err)
+		log.Fatal("❌ Error opening DB:", err)
 	}
-
 	if err = db.Ping(); err != nil {
-		log.Fatal("DB connection failed:", err)
+		log.Fatal("❌ DB connection failed:", err)
 	}
-
-	fmt.Println("Connected to MySQL successfully")
+	fmt.Println("✅ Connected to MySQL successfully")
 
 	http.HandleFunc("/users", usersHandler)
 
-	fmt.Println("Server running on http://localhost:8080")
+	fmt.Println("🚀 Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -56,8 +52,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 
 func insertUser(w http.ResponseWriter, r *http.Request) {
 	var user User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Invalid JSON input", http.StatusBadRequest)
 		return
 	}
@@ -93,8 +88,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	var users []User
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Mobile)
-		if err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Mobile); err != nil {
 			http.Error(w, "Failed to scan user", http.StatusInternalServerError)
 			return
 		}
