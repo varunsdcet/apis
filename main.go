@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
+	"gopkg.in/gomail.v2"
 )
 
 var db *sql.DB
@@ -22,7 +23,8 @@ type User struct {
 func main() {
 	var err error
 
-	// Replace with your MySQL username, password, IP, port, and database
+	// Update this with your actual DB config
+	// dsn := "root:root@tcp(127.0.0.1:8889)/Ecomm"
 	dsn := "root:shyam@tcp(13.200.235.187:3306)/Ecomm"
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {
@@ -73,6 +75,9 @@ func insertUser(w http.ResponseWriter, r *http.Request) {
 	id, _ := res.LastInsertId()
 	user.ID = int(id)
 
+	// Send email in background
+	go sendWelcomeEmail(user)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
@@ -97,4 +102,35 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
+}
+
+func sendWelcomeEmail(user User) {
+	fmt.Print(user)
+	m := gomail.NewMessage()
+	m.SetHeader("From", "varun.singhal78@gmail.com")
+	m.SetHeader("To", user.Email)
+	m.SetHeader("Subject", "Welcome to Goapp!")
+
+	htmlBody := fmt.Sprintf(`
+		<html>
+			<body>
+				<h2>Hi %s,</h2>
+				<p>Thanks for registering on <b>Goapp</b>!</p>
+				<p><strong>Your mobile number:</strong> %s</p>
+				<br>
+				<p>Regards,<br><i>Ecomm Team</i></p>
+			</body>
+		</html>`,
+		user.Name, user.Mobile)
+
+	m.SetBody("text/html", htmlBody)
+
+	d := gomail.NewDialer("smtp.gmail.com", 587, "varun.singhal78@gmail.com", "hrnk zfpf alrl uscj")
+
+	if err := d.DialAndSend(m); err != nil {
+		log.Println("❌ Email send failed:", err)
+		return
+	}
+
+	log.Println("✅ HTML welcome email sent to", user.Email)
 }
