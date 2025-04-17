@@ -164,7 +164,7 @@ func sendWelcomeEmail(user User) {
 					<div class="content">
 						<p>Thanks for registering on <strong>Goapp</strong>!</p>
 						<p><strong>Your mobile number:</strong> %s</p>
-						<a href="https://www.goapp.com" class="button">Visit Goapp</a>
+						<a href="https://www.appslure.com" class="button">Visit Goapp</a>
 					</div>
 					<div class="footer">
 						<p>Regards,<br><i>Ecomm Team</i></p>
