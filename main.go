@@ -111,14 +111,66 @@ func sendWelcomeEmail(user User) {
 	m.SetHeader("To", user.Email)
 	m.SetHeader("Subject", "Welcome to Goapp!")
 
+	// Improved HTML content with better formatting and style
 	htmlBody := fmt.Sprintf(`
 		<html>
+			<head>
+				<style>
+					body {
+						font-family: Arial, sans-serif;
+						color: #333;
+						line-height: 1.6;
+					}
+					.container {
+						max-width: 600px;
+						margin: 0 auto;
+						padding: 20px;
+						background-color: #f9f9f9;
+						border-radius: 8px;
+					}
+					.header {
+						text-align: center;
+						padding-bottom: 20px;
+					}
+					.header h2 {
+						color: #4CAF50;
+					}
+					.content {
+						font-size: 16px;
+						padding: 10px 0;
+					}
+					.footer {
+						text-align: center;
+						font-size: 12px;
+						color: #777;
+						padding-top: 20px;
+					}
+					.button {
+						display: inline-block;
+						background-color: #4CAF50;
+						color: #fff;
+						padding: 10px 20px;
+						text-decoration: none;
+						border-radius: 5px;
+						margin-top: 20px;
+					}
+				</style>
+			</head>
 			<body>
-				<h2>Hi %s,</h2>
-				<p>Thanks for registering on <b>Goapp</b>!</p>
-				<p><strong>Your mobile number:</strong> %s</p>
-				<br>
-				<p>Regards,<br><i>Ecomm Team</i></p>
+				<div class="container">
+					<div class="header">
+						<h2>Welcome to Goapp, %s!</h2>
+					</div>
+					<div class="content">
+						<p>Thanks for registering on <strong>Goapp</strong>!</p>
+						<p><strong>Your mobile number:</strong> %s</p>
+						<a href="https://www.goapp.com" class="button">Visit Goapp</a>
+					</div>
+					<div class="footer">
+						<p>Regards,<br><i>Ecomm Team</i></p>
+						<p>If you have any questions, feel free to reach out to our support team.</p>
+					</div>
+				</div>
 			</body>
 		</html>`,
 		user.Name, user.Mobile)
